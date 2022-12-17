@@ -1,0 +1,67 @@
+version: '3'
+
+volumes:
+  postgres_data: {}
+  postgres_backup: {}
+
+services:
+  database:
+    restart: always
+    image: postgres:13-alpine
+    container_name: jotpad_db
+    environment:
+      - POSTGRES_PASSWORD={{ POSTGRES_PASSWORD }}
+      - POSTGRES_USER={{ POSTGRES_USER }}
+      - POSTGRES_DB={{ POSTGRES_DB }}
+    ports:
+      - "8092:5432" # to avoid local ports from clashing
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_backup:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jotpad_dev"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  nginx:
+    container_name: nginx_server
+    build:
+      context: sjamesblog
+      dockerfile: Dockerfile.nginx
+    depends_on:
+      - web
+    ports:
+      - "0.0.0.0:80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  web:
+    restart: always
+    container_name: jotpad_web
+    user: "root:jotpad"
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+    entrypoint: ["/bin/sh","-c"]
+    command:
+    - |
+      pwd
+      poetry run pad/manage.py makemigrations
+      poetry run pad/manage.py migrate
+      echo "from django.contrib.auth.models import User; User.objects.filter(email='jotpad@example.com').delete(); User.objects.create_superuser('devadmin', 'jotpad@example.com', 'padjot')" | poetry run pad/manage.py shell
+      echo Starting Django development server..
+      poetry run pad/manage.py runserver 0.0.0.0:8000
+    environment:
+      - DJANGO_SETTINGS_MODULE=jotpad.settings.prod
+      - DATABASE_URL={{ DATABASE_URL }}
+      - SECRET_KEY={{ SECRET_KEY }}
+
+networks:
+  default:
+      name: jotpad

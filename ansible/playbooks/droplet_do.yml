@@ -1,0 +1,6 @@
+---
+- name: Configure DO droplet
+  hosts: all
+  become: yes
+  roles:
+    - docker-setup

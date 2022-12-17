@@ -24,7 +24,6 @@ resource "digitalocean_droplet" "sj-blogapp" {
   provisioner "local-exec" {
 
     command = <<EOF
-      export ANSIBLE_HOST_KEY_CHECKING=False
       export ANSIBLE_CONFIG="${local.ansible_directory}/${var.ansible_config_path}"
       ansible-playbook --private-key ${var.pvt_key} ${local.ansible_directory}/${var.external_ansible_playbook_path} -u root -i '${self.ipv4_address},' -e 'pub_key=${var.pub_key}' --vault-password-file ${var.vault_file_pw}
 EOF

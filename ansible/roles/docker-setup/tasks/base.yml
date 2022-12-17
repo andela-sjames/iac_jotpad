@@ -1,0 +1,33 @@
+---
+- name: Add the user "{{ app_user }}" and add it to 'sudo'
+  user:
+    name: "{{ app_user }}"
+    group: sudo
+
+- name: Add user's authorized keys 'svjames'
+  authorized_key:
+    user: "{{ app_user }}"
+    state: present
+    key: "{{ lookup('file', pub_key) }}"
+
+- name: Wait for apt to unlock
+  shell: while sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1; do sleep 5; done;
+
+- name: Update apt cache
+  apt: update_cache=yes cache_valid_time=3600
+
+- name: Upgrade all apt packages
+  apt: upgrade=dist
+
+- name: Install dependencies
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - gnupg-agent

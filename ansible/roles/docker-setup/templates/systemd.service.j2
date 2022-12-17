@@ -1,0 +1,15 @@
+[Unit]
+Description="SVJames {{ service_name }}"
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+WorkingDirectory={{ service_directory }}
+ExecStartPre=/bin/bash -c "/usr/local/bin/docker-compose -f {{ service_directory }}/docker-compose.prod.yml pull"
+ExecStart=/bin/bash -c "/usr/local/bin/docker-compose -f {{ service_directory }}/docker-compose.prod.yml up"
+ExecStop=/bin/bash -c "/usr/local/bin/docker-compose -f {{ service_directory }}/docker-compose.prod.yml down"
+ExecReload=/bin/bash -c "/usr/local/bin/docker-compose -f {{ service_directory }}/docker-compose.prod.yml kill -s HUP"
+
+[Install]
+WantedBy=multi-user.target

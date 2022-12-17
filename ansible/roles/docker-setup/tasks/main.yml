@@ -1,0 +1,53 @@
+---
+- name: Create main service directory
+  file:
+    path: "{{ service_directory }}"
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+- include_tasks: base.yml
+
+- include_tasks: docker.yml
+
+- include_vars: secrets.yml
+
+- name: Download jotpad the GitRepo
+  git:
+    repo: "https://{{github_pa_token}}@github.com/andela-sjames/jotpad"
+    dest: "{{ service_directory }}"
+
+- name: Place docker compose config for prod
+  template:
+    src: templates/docker-compose.yml.j2
+    dest: "{{ service_directory }}/docker-compose.prod.yml"
+  vars:
+    DATABASE_URL: "{{ DATABASE_URL }}"
+    SECRET_KEY: "{{ SECRET_KEY }}"
+    POSTGRES_PASSWORD: "{{ POSTGRES_PASSWORD }}"
+    POSTGRES_USER: "{{ POSTGRES_USER }}"
+    POSTGRES_DB: "{{ POSTGRES_DB }}"
+
+
+# All sub services above this line
+- name: Install systemd unit file
+  template:
+    src: templates/systemd.service.j2
+    dest: "/etc/systemd/system/{{ service_name }}.service"
+  notify:
+    - reload systemd
+
+- name: Start/Enable service
+  systemd:
+    name: "{{ service_name }}"
+    state: stopped
+    enabled: yes
+    daemon_reload: yes
+    masked: no
+
+- name: "Make sure {{ service_name }} is running"
+  systemd:
+    state: started
+    name: "{{ service_name }}"
+  async: 90
