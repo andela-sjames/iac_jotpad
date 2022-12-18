@@ -56,9 +56,11 @@ services:
       pwd
       poetry run pad/manage.py makemigrations
       poetry run pad/manage.py migrate
+      poetry run pad/manage.py collectstatic --noinput --clear
       echo "from django.contrib.auth.models import User; User.objects.filter(email='jotpad@example.com').delete(); User.objects.create_superuser('devadmin', 'jotpad@example.com', 'padjot')" | poetry run pad/manage.py shell
-      echo Starting Django development server..
-      poetry run pad/manage.py runserver 0.0.0.0:8000
+      echo Starting Gunicorn server...
+      cd pad
+      exec gunicorn jotpad.wsgi:application --bind 0.0.0.0:8000 --workers 3 --pythonpath=jotpadlog --log-file -
     environment:
       - DJANGO_SETTINGS_MODULE=jotpad.settings.prod
       - DATABASE_URL={{ DATABASE_URL }}
