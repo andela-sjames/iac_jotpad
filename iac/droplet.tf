@@ -1,6 +1,6 @@
-resource "digitalocean_droplet" "sj-blogapp" {
+resource "digitalocean_droplet" "jotpad" {
   image  = "ubuntu-20-04-x64"
-  name   = "sj-blogapp"
+  name   = "jotpad"
   region = "fra1"
   size   = "s-1vcpu-1gb"
 

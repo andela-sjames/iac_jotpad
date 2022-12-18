@@ -2,5 +2,13 @@
 - name: Configure DO droplet
   hosts: all
   become: yes
+  vars:
+    service_name: "jotpad"
+    service_directory: "/project/{{ service_name }}"
+    docker_compose_version: "1.27.4"
+    app_user: "user_jotpad"
+
+    domain_name: yourdomain.com
+    email: yourdomain@gmail.com
   roles:
     - docker-setup
