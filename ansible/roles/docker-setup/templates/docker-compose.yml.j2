@@ -27,7 +27,7 @@ services:
   nginx:
     container_name: nginx_server
     build:
-      context: sjamesblog
+      context: jotpad
       dockerfile: Dockerfile.nginx
     depends_on:
       - web
@@ -40,7 +40,9 @@ services:
     restart: always
     container_name: jotpad_web
     user: "root:jotpad"
-    build: .
+    build:
+      context: jotpad
+      dockerfile: Dockerfile
     volumes:
       - .:/app
     ports:
