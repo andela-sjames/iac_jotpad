@@ -31,5 +31,4 @@ override.tf.json
 
 prod.tfvars
 vault_pass.txt
-ansible_deploy.sh
 inventory
